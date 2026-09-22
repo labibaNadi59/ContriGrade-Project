@@ -1,0 +1,91 @@
+{% extends 'academic/base.html' %}
+
+{% block title %}Course Coordinator Dashboard - ContriGrade{% endblock %}
+
+{% block sidebar_links %}
+<a href="{% url 'coordinator_dashboard' %}" class="flex items-center space-x-3 px-3 py-2.5 bg-indigo-50 text-indigo-600 rounded-lg text-sm font-semibold">
+    <i class="fa-solid fa-layer-group w-5"></i>
+    <span>Overview & Management</span>
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <!-- Top Header and Action Buttons -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <div>
+            <h2 class="text-2xl font-bold">Course Oversight & Curriculum Management</h2>
+            <p class="text-gray-600 text-sm">Define courses, create sections, and manage faculty allocations.</p>
+        </div>
+        <div class="flex space-x-3">
+            <a href="{% url 'course_create' %}" class="bg-gray-800 text-white font-semibold px-4 py-2 rounded-lg text-sm hover:bg-gray-900 transition shadow-sm flex items-center space-x-2">
+                <i class="fa-solid fa-book-medical"></i>
+                <span>Add New Course</span>
+            </a>
+            <a href="{% url 'section_create' %}" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg text-sm hover:bg-indigo-700 transition shadow-sm flex items-center space-x-2">
+                <i class="fa-solid fa-plus"></i>
+                <span>Add New Section</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Active Courses & Sections Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Courses List Card -->
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <h3 class="text-lg font-bold mb-4 border-b pb-2">Defined Courses</h3>
+            <div class="space-y-3">
+                {% for course in courses %}
+                    <div class="p-3 border rounded-lg bg-gray-50 flex justify-between items-center">
+                        <div>
+                            <h4 class="font-bold text-gray-800 text-sm">{{ course.course_code }} - {{ course.course_name }}</h4>
+                            <p class="text-xs text-gray-500">Coordinator: {{ course.coordinator.name|default:"Unassigned" }}</p>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p class="text-gray-500 italic text-sm">No courses defined yet. Click "Add New Course" above.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Sections & Instructor Assignment Card -->
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <h3 class="text-lg font-bold mb-4 border-b pb-2">Course Sections & Instructors</h3>
+            <div class="space-y-4">
+                {% for section in sections %}
+                    <div class="p-4 border rounded-lg bg-gray-50 space-y-2">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-bold text-indigo-600 text-sm">{{ section.course.course_code }} | Section: {{ section.section_name }}</h4>
+                            </div>
+                            <form method="post" action="{% url 'section_delete' section.section_id %}" onsubmit="return confirm('Delete this section?');">
+                                {% csrf_token %}
+                                <button type="submit" class="text-red-500 hover:text-red-700 text-xs font-semibold">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+
+                        <form method="post" action="{% url 'section_update_instructor' section.section_id %}" class="flex items-center space-x-2 pt-2 border-t">
+                            {% csrf_token %}
+                            <select name="instructor" class="w-full px-2 py-1 border rounded text-xs bg-white">
+                                <option value="">-- Select Instructor --</option>
+                                {% for inst in instructors %}
+                                    <option value="{{ inst.user_id }}" {% if section.instructor and section.instructor.user_id == inst.user_id %}selected{% endif %}>
+                                        {{ inst.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="bg-indigo-600 text-white px-3 py-1 rounded text-xs hover:bg-indigo-700">
+                                Update
+                            </button>
+                        </form>
+                    </div>
+                {% empty %}
+                    <p class="text-gray-500 italic text-sm">No sections created yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
